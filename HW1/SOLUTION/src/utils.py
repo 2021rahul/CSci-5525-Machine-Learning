@@ -70,3 +70,15 @@ def plot_histograms(X, Y):
     data = [grouped_data[key] for key in grouped_data]
     plt.hist(data, color=colors[:num_classes])
     plt.show()
+
+
+def sigmoid(X):
+    return 1.0/(1.0 + np.exp(-1.0 * X))
+
+
+def softmax(weights, bias, x):
+    output = np.dot(x, weights)
+    output = np.add(output, bias)
+    output = np.exp(output)
+    output = output.T/np.sum(output, axis=1)
+    return output.T
