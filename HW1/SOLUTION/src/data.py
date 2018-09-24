@@ -59,8 +59,10 @@ class Boston(DATA):
         threshold = np.percentile(self.dataY, config.THRESHOLD_PERCENTILE)
         self.dataY[self.dataY < threshold] = 0
         self.dataY[self.dataY >= threshold] = 1
-        self.dataY = np.reshape(self.dataY, (len(self.dataY), 1))
-        self.classes = np.unique(self.dataY)
+#        self.dataY = np.reshape(self.dataY, (len(self.dataY), 1))
+#        self.classes = np.unique(self.dataY)
+        onehot_encoder = OneHotEncoder(sparse=False)
+        self.dataY = onehot_encoder.fit_transform(self.dataY.reshape(-1,1))
 
 
 class Digits(DATA):

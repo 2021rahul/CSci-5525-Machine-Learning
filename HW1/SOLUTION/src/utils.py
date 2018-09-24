@@ -63,8 +63,9 @@ def within_class_scatter(X, Y):
 def project_data(X, directions):
     return np.dot(X, directions)
 
-colors = ["red", "yellow", "green", "blue"]
+
 def plot_histograms(X, Y):
+    colors = ["red", "yellow", "green", "blue"]
     grouped_data = group_data(X, Y)
     num_classes = len(np.unique(Y[:, 0]))
     data = [grouped_data[key] for key in grouped_data]

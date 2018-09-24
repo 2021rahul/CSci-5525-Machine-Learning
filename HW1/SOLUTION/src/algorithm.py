@@ -55,12 +55,19 @@ class LogisticRegression():
         for epoch in range(n_epochs):
             self.gradient_update(dataX, dataY, lr_rate)
             log_likelihood = self.negative_log_likelihood(dataX, dataY)
-            print("Epoch: ", epoch, " error: ", log_likelihood)
+#            print("Epoch: ", epoch, " error: ", log_likelihood)
 
     def test(self, dataX, dataY):
         prediction = self.forward_propogation(dataX)
         prediction = prediction.argmax(axis=1)
         target = dataY.argmax(axis=1)
         count = np.sum(prediction == target)
-        print("Accuracy: ", count/len(target))
+#        print("Accuracy: ", count/len(target))
         return count
+
+
+class NaiveBayes():
+
+    def __init__(self):
+        self.mean = None
+        self.stddev = None
