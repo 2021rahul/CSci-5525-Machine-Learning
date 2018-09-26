@@ -9,6 +9,7 @@ Created on Mon Sep 17 09:20:43 2018
 
 import utils
 import numpy as np
+import math
 
 
 class LDA():
@@ -33,12 +34,6 @@ class LogisticRegression():
 
     def forward_propogation(self, x):
         return utils.softmax(self.weights, self.bias, x)
-
-    def classify(self, x):
-        output = self.forward_propogation(x)
-        indices = output.argmax(axis=1)
-        lablels = map(self.labels, indices)
-        return lablels
 
     def negative_log_likelihood(self, x, y):
         sigmoid = self.forward_propogation(x)
@@ -69,5 +64,71 @@ class LogisticRegression():
 class NaiveBayes():
 
     def __init__(self):
-        self.mean = None
-        self.stddev = None
+        self.class_mean = {}
+        self.class_stddev = {}
+
+    def separate_data_into_classes(self, dataX, dataY):
+        separate_data = {}
+        classes = np.unique(dataY)
+        for class_val in classes:
+            get_data = dataX[dataY == class_val, :]
+            separate_data[class_val] = get_data
+        return separate_data
+
+    def calulate_classwise_summary(self, dataX, dataY):
+        separate_data = self.separate_data_into_classes(dataX, dataY)
+        for key, data in separate_data.items():
+            self.class_mean[key] = utils.mean(data)
+            self.class_stddev[key] = utils.stddev(data)
+
+    def calculate_probability(self, x, mean, stddev):
+        exp_num = np.power(x-mean, 2)
+        exp_den = 2*np.power(stddev, 2)
+        num = np.exp(np.divide(-exp_num, exp_den))
+        den = np.sqrt(2*math.pi*stddev)
+        vals = np.divide(num, den)
+        vals[np.isnan(vals)] = 1
+        return np.prod(vals)
+
+    def train(self, trainX, trainY):
+        self.calulate_classwise_summary(trainX, trainY)
+
+    def predict(self, probabilities):
+        best_label = None
+        best_val = None
+        for class_val, probability in probabilities.items():
+            if best_label is None or probability > best_val:
+                best_label = class_val
+                best_val = probability
+        return best_label
+
+    def test(self, testX, testY):
+        predictions = []
+        for data in testX:
+            probabilities = {}
+            for class_val, _ in self.class_mean.items():
+                prob = self.calculate_probability(data, self.class_mean[class_val], self.class_stddev[class_val])
+                probabilities[class_val] = prob
+            predictions.append(self.predict(probabilities))
+        predictions = np.asarray(predictions)
+        count = np.sum(predictions == testY)
+        return count
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

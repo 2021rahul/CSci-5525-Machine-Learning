@@ -13,6 +13,9 @@ import matplotlib.pyplot as plt
 def mean(array):
     return array.mean(axis=0)
 
+def stddev(array):
+    return np.std(array, axis=0)
+
 
 def get_sorted_eigens(array):
     eigen_value, eigen_vector = np.linalg.eig(array)
