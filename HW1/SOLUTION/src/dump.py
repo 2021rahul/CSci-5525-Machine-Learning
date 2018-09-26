@@ -15,54 +15,64 @@ from sklearn.linear_model import LogisticRegression
 import math
 
 
-dataset = data.Digits()
+dataset = data.Boston()
 dataset.load_dataset()
 dataset.get_kfold_splits(10)
 trainX, trainY, testX, testY = dataset.generate_data()
 trainY = trainY.argmax(axis=1)
 testY = testY.argmax(axis=1)
 
-seperate_data = {}
-classes = np.unique(trainY)
-for class_val in classes:
-    get_data = trainX[trainY == class_val, :]
-    seperate_data[class_val] = get_data
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+lda = LinearDiscriminantAnalysis(n_components = 1)
+see = lda.fit_transform(trainX, trainY)
+trainY = np.asarray(np.reshape(trainY, (len(trainY), 1)))
+grouped_data = utils.group_data(trainX, trainY)
 
-class_summaries = {}
-for key, data in seperate_data.items():
-    summaries = {}
-    summaries["mean"] = utils.mean(data)
-    summaries["stddev"] = utils.stddev(data)
-    class_summaries[key] = summaries
+#utils.plot_histograms(see, np.reshape(trainY, (len(trainY), 1)))
 
-def calculate_probability(x, mean, stddev):
-    exp_num = np.power(x-mean, 2)
-    exp_den = 2*np.power(stddev, 2)
-    num = np.exp(np.divide(-exp_num, exp_den))
-    den = np.sqrt(2*math.pi*stddev)
-    vals = np.divide(num, den)
-    vals[np.isnan(vals)] = 1
-    return np.prod(vals)
 
-predictions = []
-for data in testX:
-    probabilities = {}
-    for class_val, class_summary in class_summaries.items():
-        mean = class_summary["mean"]
-        stddev = class_summary["stddev"]
-        prob = calculate_probability(data, mean, stddev)
-        probabilities[class_val] = prob
-    probability = 0
-    best_label = None
-    best_val = None
-    for class_val, probability in probabilities.items():
-        if best_label is None or probability > best_val:
-            best_label = class_val
-            best_val = probability
-    predictions.append(best_label)
 
-predictions = np.asarray(predictions)
-accuracy = np.sum(predictions==testY)
+#seperate_data = {}
+#classes = np.unique(trainY)
+#for class_val in classes:
+#    get_data = trainX[trainY == class_val, :]
+#    seperate_data[class_val] = get_data
+#
+#class_summaries = {}
+#for key, data in seperate_data.items():
+#    summaries = {}
+#    summaries["mean"] = utils.mean(data)
+#    summaries["stddev"] = utils.stddev(data)
+#    class_summaries[key] = summaries
+#
+#def calculate_probability(x, mean, stddev):
+#    exp_num = np.power(x-mean, 2)
+#    exp_den = 2*np.power(stddev, 2)
+#    num = np.exp(np.divide(-exp_num, exp_den))
+#    den = np.sqrt(2*math.pi*stddev)
+#    vals = np.divide(num, den)
+#    vals[np.isnan(vals)] = 1
+#    return np.prod(vals)
+#
+#predictions = []
+#for data in testX:
+#    probabilities = {}
+#    for class_val, class_summary in class_summaries.items():
+#        mean = class_summary["mean"]
+#        stddev = class_summary["stddev"]
+#        prob = calculate_probability(data, mean, stddev)
+#        probabilities[class_val] = prob
+#    probability = 0
+#    best_label = None
+#    best_val = None
+#    for class_val, probability in probabilities.items():
+#        if best_label is None or probability > best_val:
+#            best_label = class_val
+#            best_val = probability
+#    predictions.append(best_label)
+#
+#predictions = np.asarray(predictions)
+#accuracy = np.sum(predictions==testY)
 
 #X = dataset.dataX
 #Y = dataset.dataY

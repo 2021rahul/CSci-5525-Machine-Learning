@@ -113,22 +113,3 @@ class NaiveBayes():
         predictions = np.asarray(predictions)
         count = np.sum(predictions == testY)
         return count
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
