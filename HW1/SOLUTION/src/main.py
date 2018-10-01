@@ -22,18 +22,26 @@ def LDA1dProjection():
     # PROJECT TO 1 DIMENSION
     lda = algorithm.LDA(dimensions=1)
     lda.get_projections(dataset)
-    eigen_vectors = lda.eigens
-    dataX = utils.project_data(dataset.dataX, eigen_vectors)
+    projection_vectors = lda.w
+    print(projection_vectors.shape)
+    dataX = utils.project_data(dataset.dataX, projection_vectors)
     utils.plot_histograms(dataX, dataset.dataY)
+
+
+#def LDA2dGaussGM():
+    
 
 
 def logisticRegression(filename, num_splits , train_percent):
     # PREPARE DATA
     if(filename=="DIGITS"):
         dataset = data.Digits()
+        dataset.load_dataset()
     elif(filename=="BOSTON"):
         dataset = data.Boston()
-    dataset.load_dataset()
+        dataset.load_dataset()
+        dataset.categorize_data()
+    dataset.one_hot_encoded()
     dataset.get_kfold_splits(num_splits)
 
     # RUN LOGISTIC REGRESSION ON THE SPLITS
@@ -44,8 +52,9 @@ def logisticRegression(filename, num_splits , train_percent):
         train_use = int((train_percent*len(trainX))/100)
         LR = algorithm.LogisticRegression([trainX.shape[1], trainY.shape[1]])
         LR.train(trainX[:train_use,:], trainY[:train_use, :], 0.00001, 1000)
-        accuracy.append(LR.test(testX, testY))
+        accuracy.append(LR.test(testX, testY)/len(testY))
     return accuracy
+
 
 def naiveBayesGaussian(filename, num_splits , train_percent):
     # PREPARE DATA
@@ -71,15 +80,23 @@ def naiveBayesGaussian(filename, num_splits , train_percent):
 
 
 if __name__ == "__main__":
+    LDA1dProjection()
 
-    LRaccuracy10 = np.asarray(logisticRegression("DIGITS", 10, 10))/180
-    LRaccuracy25 = np.asarray(logisticRegression("DIGITS", 10, 25))/180
-    LRaccuracy50 = np.asarray(logisticRegression("DIGITS", 10, 50))/180
-    LRaccuracy75 = np.asarray(logisticRegression("DIGITS", 10, 75))/180
-    LRaccuracy100 = np.asarray(logisticRegression("DIGITS", 10, 100))/180
+#    LRaccuracy10 = np.asarray(logisticRegression("BOSTON", 10, 10))
+#    LRaccuracy25 = np.asarray(logisticRegression("BOSTON", 10, 25))
+#    LRaccuracy50 = np.asarray(logisticRegression("BOSTON", 10, 50))
+#    LRaccuracy75 = np.asarray(logisticRegression("BOSTON", 10, 75))
+#    LRaccuracy100 = np.asarray(logisticRegression("BOSTON", 10, 100))
 
-    NBaccuracy10 = np.asarray(naiveBayesGaussian("DIGITS", 10, 10))/180
-    NBaccuracy25 = np.asarray(naiveBayesGaussian("DIGITS", 10, 25))/180
-    NBaccuracy50 = np.asarray(naiveBayesGaussian("DIGITS", 10, 50))/180
-    NBaccuracy75 = np.asarray(naiveBayesGaussian("DIGITS", 10, 75))/180
-    NBaccuracy100 = np.asarray(naiveBayesGaussian("DIGITS", 10, 100))/180
+#    LRaccuracy101 = np.asarray(logisticRegression("DIGITS", 10, 10))
+#    LRaccuracy251 = np.asarray(logisticRegression("DIGITS", 10, 25))
+#    LRaccuracy501 = np.asarray(logisticRegression("DIGITS", 10, 50))
+#    LRaccuracy751 = np.asarray(logisticRegression("DIGITS", 10, 75))
+#    LRaccuracy1001 = np.asarray(logisticRegression("DIGITS", 10, 100))
+    
+#
+#    NBaccuracy10 = np.asarray(naiveBayesGaussian("DIGITS", 10, 10))/180
+#    NBaccuracy25 = np.asarray(naiveBayesGaussian("DIGITS", 10, 25))/180
+#    NBaccuracy50 = np.asarray(naiveBayesGaussian("DIGITS", 10, 50))/180
+#    NBaccuracy75 = np.asarray(naiveBayesGaussian("DIGITS", 10, 75))/180
+#    NBaccuracy100 = np.asarray(naiveBayesGaussian("DIGITS", 10, 100))/180

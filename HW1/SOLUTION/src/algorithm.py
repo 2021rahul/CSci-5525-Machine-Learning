@@ -16,15 +16,55 @@ class LDA():
 
     def __init__(self, dimensions):
         self.dimensions = dimensions
-        self.eigens = None
+        self.W = None
+
+    def between_class_scatter(self, X, Y):
+        classes = np.unique(Y[:, 0])
+        overall_mean = utils.mean(X)
+        grouped_data = utils.group_data(X, Y)
+        class_mean = []
+        for key in grouped_data:
+            class_mean.append(utils.mean(grouped_data[key]))
+        if len(classes) == 2:
+            return np.reshape(class_mean[1]-class_mean[0], (-1, 1))
+        Sb = np.zeros((X.shape[1], X.shape[1]))
+        for i in range(len(classes)):
+            val = np.reshape(class_mean[i] - overall_mean, (len(class_mean[i]), 1))
+            Sb += np.multiply(len(grouped_data[str(int(i))]), np.dot(val, val.T))
+        return Sb
+
+    def within_class_scatter(self, X, Y):
+        classes = np.unique(Y[:, 0])
+        grouped_data = utils.group_data(X, Y)
+        class_mean = []
+        for key in grouped_data:
+            class_mean.append(utils.mean(grouped_data[key]))
+        Sw = np.zeros((X.shape[1], X.shape[1]))
+        for i in range(len(classes)):
+            val = np.subtract(X.T, np.reshape(class_mean[i], (len(class_mean[i]), 1)))
+            Sw = np.add(Sw, np.dot(val, val.T))
+        return Sw
 
     def get_projections(self, data):
-        Sb = utils.between_class_scatter(data.dataX, data.dataY)
-        Sw = utils.within_class_scatter(data.dataX, data.dataY)
+        Sb = self.between_class_scatter(data.dataX, data.dataY)
+        Sw = self.within_class_scatter(data.dataX, data.dataY)
         mat = np.dot(np.linalg.inv(Sw), Sb)
-        self.eigens = utils.get_sorted_eigens(mat)
-        self.eigens = np.reshape(self.eigens[self.dimensions, 1:], (len(self.eigens), self.dimensions))
+        classes = np.unique(data.dataY[:, 0])
+        if len(classes) == 2:
+            self.w = mat
+        else:
+            eigens = utils.get_sorted_eigens(mat)
+            self.w = eigens[-self.dimensions:, 1:]
 
+
+class Gaussian_Generative():
+
+    def __init__(self):
+        self.priors = {}
+        self.class_mean = {}
+        self.class_stddev = {}
+
+#    def 
 
 class LogisticRegression():
 
@@ -57,7 +97,6 @@ class LogisticRegression():
         prediction = prediction.argmax(axis=1)
         target = dataY.argmax(axis=1)
         count = np.sum(prediction == target)
-#        print("Accuracy: ", count/len(target))
         return count
 
 
@@ -67,16 +106,16 @@ class NaiveBayes():
         self.class_mean = {}
         self.class_stddev = {}
 
-    def separate_data_into_classes(self, dataX, dataY):
-        separate_data = {}
-        classes = np.unique(dataY)
-        for class_val in classes:
-            get_data = dataX[dataY == class_val, :]
-            separate_data[class_val] = get_data
-        return separate_data
+#    def separate_data_into_classes(self, dataX, dataY):
+#        separate_data = {}
+#        classes = np.unique(dataY)
+#        for class_val in classes:
+#            get_data = dataX[dataY == class_val, :]
+#            separate_data[class_val] = get_data
+#        return separate_data
 
     def calulate_classwise_summary(self, dataX, dataY):
-        separate_data = self.separate_data_into_classes(dataX, dataY)
+        separate_data = utils.group_data(dataX, dataY)
         for key, data in separate_data.items():
             self.class_mean[key] = utils.mean(data)
             self.class_stddev[key] = utils.stddev(data)

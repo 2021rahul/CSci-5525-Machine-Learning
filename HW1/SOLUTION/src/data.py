@@ -28,7 +28,11 @@ class DATA():
     def load_dataset(self):
         raise NotImplementedError
 
-    def get_kfold_splits(self, num_splits):
+    def one_hot_encoded(self):
+        onehot_encoder = OneHotEncoder(sparse=False)
+        self.dataY = onehot_encoder.fit_transform(self.dataY.reshape(-1, 1))
+
+    def get_kfold_splits(self, num_splits=10):
         self.num_splits = num_splits
         kf = KFold(n_splits=num_splits)
         kf.get_n_splits(self.dataX)
@@ -54,13 +58,12 @@ class Boston(DATA):
         data = pd.read_csv(os.path.join(config.DATA_DIR, 'boston.csv'), header=None)
         self.dataX = data.iloc[:, :-1].values
         self.dataY = data.iloc[:, -1].values
+        self.dataY = np.reshape(self.dataY, (-1,1))
 
     def categorize_data(self):
-        threshold = np.percentile(self.dataY, config.THRESHOLD_PERCENTILE)
+        threshold = np.percentile(self.dataY, 50)
         self.dataY[self.dataY < threshold] = 0
         self.dataY[self.dataY >= threshold] = 1
-        onehot_encoder = OneHotEncoder(sparse=False)
-        self.dataY = onehot_encoder.fit_transform(self.dataY.reshape(-1,1))
 
 
 class Digits(DATA):
@@ -72,5 +75,5 @@ class Digits(DATA):
         data = pd.read_csv(os.path.join(config.DATA_DIR, 'digits.csv'), header=None)
         self.dataX = data.iloc[:, :-1].values
         self.dataY = data.iloc[:, -1].values
-        onehot_encoder = OneHotEncoder(sparse=False)
-        self.dataY = onehot_encoder.fit_transform(self.dataY.reshape(-1,1))
+        self.dataY = np.reshape(self.dataY, (-1,1))
+

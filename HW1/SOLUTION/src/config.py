@@ -11,8 +11,4 @@ import os
 # DIRECTORY INFORMATION
 ROOT_DIR = os.path.abspath('../')
 DATA_DIR = os.path.join(ROOT_DIR, 'DATASET/')
-
-# DATA INFORMATION
-FILENAME = "BOSTON"
-THRESHOLD_PERCENTILE = 50
-n_splits = 10
+OUTPUT_DIR = os.path.join(ROOT_DIR, 'OUTPUT/')

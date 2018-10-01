@@ -17,16 +17,44 @@ import math
 
 dataset = data.Boston()
 dataset.load_dataset()
-dataset.get_kfold_splits(10)
-trainX, trainY, testX, testY = dataset.generate_data()
-trainY = trainY.argmax(axis=1)
-testY = testY.argmax(axis=1)
+dataset.categorize_data()
 
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-lda = LinearDiscriminantAnalysis(n_components = 1)
-see = lda.fit_transform(trainX, trainY)
-trainY = np.asarray(np.reshape(trainY, (len(trainY), 1)))
-grouped_data = utils.group_data(trainX, trainY)
+X, Y = dataset.dataX, dataset.dataY
+#dataset.one_hot_encoded()
+#dataset.get_kfold_splits(10)
+#trainX, trainY, testX, testY = dataset.generate_data()
+#trainY = trainY.argmax(axis=1)
+#testY = testY.argmax(axis=1)
+
+classes = np.unique(Y[:, 0])
+overall_mean = mean(X)
+grouped_data = group_data(X, Y)
+class_mean = []
+for key in grouped_data:
+    class_mean.append(mean(grouped_data[key]))
+Sb = np.zeros((X.shape[1], X.shape[1]))
+for i in range(len(classes)):
+    val = np.reshape(class_mean[i] - overall_mean, (len(class_mean[i]), 1))
+    Sb += np.multiply(len(grouped_data[str(int(i))]), np.dot(val, val.T))
+
+Sw = np.zeros((X.shape[1], X.shape[1]))
+for i in range(len(classes)):
+    val = np.subtract(X.T, np.reshape(class_mean[i], (len(class_mean[i]), 1)))
+    Sw = np.add(Sw, np.dot(val, val.T))
+
+inv = np.linalg.inv(Sw)
+mat = np.dot(inv, Sb)
+eigen_value, eigen_vector = np.linalg.eig(mat)
+eigens = np.concatenate((np.reshape(eigen_value, (len(eigen_value), 1)), eigen_vector), axis=1)
+eigens = eigens[np.argsort(eigens[:, 0])]
+dataX = utils.project_data(dataset.dataX, eigens[-1:, 1:])
+#dataX = np.reshape(dataX, (-1,1))
+utils.plot_histograms(dataX, Y)
+#from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+#lda = LinearDiscriminantAnalysis(n_components = 1)
+#see = lda.fit_transform(trainX, trainY)
+#trainY = np.asarray(np.reshape(trainY, (len(trainY), 1)))
+#grouped_data = utils.group_data(trainX, trainY)
 
 #utils.plot_histograms(see, np.reshape(trainY, (len(trainY), 1)))
 
@@ -117,7 +145,3 @@ grouped_data = utils.group_data(trainX, trainY)
 #true_indices = Y.argmax(axis=1)
 #
 #accuracy = np.sum(pred_indices==true_indices)
-
-
-def word_count(text):
-    print(len(text.split(" ")))

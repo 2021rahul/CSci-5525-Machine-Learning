@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 
 def mean(array):
-    return array.mean(axis=0)
+    return np.mean(array, axis=0)
 
 def stddev(array):
     return np.std(array, axis=0)
@@ -32,47 +32,16 @@ def group_data(X, Y):
     return grouped_data
 
 
-def between_class_scatter(X, Y):
-    classes = np.unique(Y[:, 0])
-    overall_mean = mean(X)
-
-    grouped_data = group_data(X, Y)
-    class_mean = []
-    for key in grouped_data:
-        class_mean.append(mean(grouped_data[key]))
-
-    Sb = np.zeros((X.shape[1], X.shape[1]))
-    for i in range(len(classes)):
-        val = np.reshape(class_mean[i] - overall_mean, (len(class_mean[i]), 1))
-        Sb += np.multiply(len(grouped_data[str(int(i))]), np.dot(val, val.T))
-    return Sb
-
-
-def within_class_scatter(X, Y):
-    classes = np.unique(Y[:, 0])
-
-    grouped_data = group_data(X, Y)
-    class_mean = []
-    for key in grouped_data:
-        class_mean.append(mean(grouped_data[key]))
-
-    Sw = np.zeros((X.shape[1], X.shape[1]))
-    for i in range(len(classes)):
-        val = np.subtract(X.T, np.reshape(class_mean[i], (len(class_mean[i]), 1)))
-        Sw = np.add(Sw, np.dot(val, val.T))
-    return Sw
-
-
 def project_data(X, directions):
     return np.dot(X, directions)
 
 
 def plot_histograms(X, Y):
-    colors = ["red", "yellow", "green", "blue"]
+    colors = ["green", "red", "yellow", "blue"]
     grouped_data = group_data(X, Y)
     num_classes = len(np.unique(Y[:, 0]))
     data = [grouped_data[key] for key in grouped_data]
-    plt.hist(data, color=colors[:num_classes])
+    plt.hist(data, color=colors[:num_classes], bins=40)
     plt.show()
 
 
