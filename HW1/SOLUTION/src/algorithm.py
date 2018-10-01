@@ -48,11 +48,12 @@ class LDA():
     def get_projections(self, data):
         Sb = self.between_class_scatter(data.dataX, data.dataY)
         Sw = self.within_class_scatter(data.dataX, data.dataY)
-        mat = np.dot(np.linalg.inv(Sw), Sb)
         classes = np.unique(data.dataY[:, 0])
         if len(classes) == 2:
+            mat = np.dot(np.linalg.inv(Sw), Sb)
             self.w = mat
         else:
+            mat = np.dot(np.linalg.pinv(Sw), Sb)
             eigens = utils.get_sorted_eigens(mat)
             self.w = eigens[-self.dimensions:, 1:]
 
