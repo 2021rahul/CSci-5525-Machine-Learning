@@ -55,7 +55,7 @@ class LDA():
         else:
             mat = np.dot(np.linalg.pinv(Sw), Sb)
             eigens = utils.get_sorted_eigens(mat)
-            self.w = eigens[-self.dimensions:, 1:]
+            self.w = eigens[-self.dimensions:, 1:].T
 
 
 class Gaussian_Generative():
@@ -63,9 +63,57 @@ class Gaussian_Generative():
     def __init__(self):
         self.priors = {}
         self.class_mean = {}
-        self.class_stddev = {}
+        self.sigma = None
 
-#    def 
+    def calulate_priors(self, Y):
+        classes = np.unique(Y)
+        for class_val in classes:
+            self.priors[str(class_val)] = len(Y[Y == class_val])/len(Y)
+
+    def calculate_params(self, X, Y):
+        grouped_data = utils.group_data(X, Y)
+        for key in grouped_data:
+            self.class_mean[key] = utils.mean(grouped_data[key])
+
+        self.sigma = np.zeros((X.shape[1], X.shape[1]))
+        for key in grouped_data:
+            val = grouped_data[key] - self.class_mean[key]
+            val = np.dot(val.T, val)
+            self.sigma += val
+        self.sigma /= X.shape[0]
+
+    def calculate_probability(self, x, mean, sigma, prior):
+        invsigma = np.linalg.inv(sigma)
+        detsigma = np.linalg.det(sigma)
+        num = np.exp(-0.5*(x-mean)*invsigma*(x-mean).T)
+        den = 2*np.pi*np.power(detsigma, 0.5)
+        return (num/den)*prior
+
+    def train(self, trainX, trainY):
+        self.calulate_priors(trainY)
+        self.calculate_params(trainX, trainY)
+
+    def predict(self, probabilities):
+        best_label = None
+        best_val = None
+        for class_val, probability in probabilities.items():
+            if best_label is None or probability > best_val:
+                best_label = class_val
+                best_val = probability
+        return int(best_label)
+
+    def test(self, testX, testY):
+        predictions = []
+        for data in testX:
+            probabilities = {}
+            for class_val, _ in self.class_mean.items():
+                prob = self.calculate_probability(data, self.class_mean[class_val], self.sigma, self.priors[class_val])
+                probabilities[class_val] = prob
+            predictions.append(self.predict(probabilities))
+        predictions = np.asarray(predictions)
+        count = np.sum(predictions == testY)
+        return count
+
 
 class LogisticRegression():
 
@@ -107,16 +155,16 @@ class NaiveBayes():
         self.class_mean = {}
         self.class_stddev = {}
 
-#    def separate_data_into_classes(self, dataX, dataY):
-#        separate_data = {}
-#        classes = np.unique(dataY)
-#        for class_val in classes:
-#            get_data = dataX[dataY == class_val, :]
-#            separate_data[class_val] = get_data
-#        return separate_data
+    def separate_data_into_classes(self, dataX, dataY):
+        separate_data = {}
+        classes = np.unique(dataY)
+        for class_val in classes:
+            get_data = dataX[dataY == class_val, :]
+            separate_data[class_val] = get_data
+        return separate_data
 
     def calulate_classwise_summary(self, dataX, dataY):
-        separate_data = utils.group_data(dataX, dataY)
+        separate_data = self.separate_data_into_classes(dataX, dataY)
         for key, data in separate_data.items():
             self.class_mean[key] = utils.mean(data)
             self.class_stddev[key] = utils.stddev(data)

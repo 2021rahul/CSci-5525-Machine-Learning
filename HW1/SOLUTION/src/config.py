@@ -12,3 +12,6 @@ import os
 ROOT_DIR = os.path.abspath('../')
 DATA_DIR = os.path.join(ROOT_DIR, 'DATASET/')
 OUTPUT_DIR = os.path.join(ROOT_DIR, 'OUTPUT/')
+
+# TRAIN PERCENTAGES
+percentage = [10, 25, 50, 75, 100]

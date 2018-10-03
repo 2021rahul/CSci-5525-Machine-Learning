@@ -7,14 +7,23 @@ Created on Mon Sep 17 09:20:43 2018
 """
 
 import numpy as np
+import random
 import matplotlib.pyplot as plt
 
 
 def mean(array):
     return np.mean(array, axis=0)
 
+
 def stddev(array):
     return np.std(array, axis=0)
+
+
+def randomize_data(X, Y):
+    index = random.sample(range(0, len(Y)), len(Y))
+    X = X[index, :]
+    Y = Y[index, :]
+    return X, Y
 
 
 def get_sorted_eigens(array):

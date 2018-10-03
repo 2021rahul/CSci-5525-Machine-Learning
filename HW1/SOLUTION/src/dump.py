@@ -13,43 +13,128 @@ import numpy as np
 import utils
 from sklearn.linear_model import LogisticRegression
 import math
+import random
 
 
-dataset = data.Boston()
+dataset = data.Digits()
 dataset.load_dataset()
-dataset.categorize_data()
+#dataset.categorize_data()
 
 X, Y = dataset.dataX, dataset.dataY
+grouped_data = utils.group_data(X,Y)
+
+trainX = np.zeros((1, X.shape[1]))
+testX = np.zeros((1, X.shape[1]))
+trainY = np.zeros((1,1))
+testY = np.zeros((1,1))
+
+for key in grouped_data:
+    dataX = grouped_data[key]
+    dataY = int(key)*np.ones((len(dataX), 1))
+
+    index = random.sample(range(0, len(dataX)), len(dataX))
+    split_index = int(0.8*len(dataX))
+    
+    trainX = np.concatenate((trainX, dataX[index[:split_index], :]))
+    testX = np.concatenate((testX, dataX[index[split_index:], :]))
+    
+    trainY = np.concatenate((trainY, dataY[index[:split_index], :]))
+    testY = np.concatenate((testY, dataY[index[split_index:], :]))
+
+trainX = trainX[1:,:]
+trainY = trainY[1:,:]
+testX = testX[1:,:]
+testY = testY[1:,:]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+classes = np.unique(Y)
+
+lda = algorithm.LDA(dimensions=2)
+lda.get_projections(dataset)
+projection_vectors = lda.w
+print(projection_vectors.shape)
+X = utils.project_data(dataset.dataX, projection_vectors)
+
+### Gaussian generative
+prior = {}
+for class_val in classes:
+    prior[str(class_val)] = len(Y[Y == class_val])/len(Y)
+
+grouped_data = utils.group_data(X,Y)
+class_mean = {}
+for key in grouped_data:
+    class_mean[key] = utils.mean(grouped_data[key])
+
+sigma = np.zeros((X.shape[1],X.shape[1]))
+see = grouped_data['0'] - class_mean['0']
+for key in grouped_data:
+    val = grouped_data[key] - class_mean[key]
+    val = np.dot(val.T, val)
+    sigma = sigma+val
+sigma = sigma/X.shape[0]
+
+invsigma= np.linalg.inv(sigma)
+
+
+probabilities = {}
+
+for key in grouped_data:
+    num = np.exp(-0.5*(X[0]-class_mean[key])*invsigma*(X[0]-class_mean[key]).T)
+    den = 2*np.pi*np.power(np.linalg.det(sigma),0.5)
+    probabilities[key] = (num/den)*prior[key]
+
+max_val = 0
+index = None
+for key in probabilities:
+    if(probabilities[key]>max):
+        max_val = probabilities[key]
+        index = key
+#sigma = val.sum(axis=0)
+#for key in grouped_data:
+
+
 #dataset.one_hot_encoded()
 #dataset.get_kfold_splits(10)
 #trainX, trainY, testX, testY = dataset.generate_data()
 #trainY = trainY.argmax(axis=1)
 #testY = testY.argmax(axis=1)
 
-classes = np.unique(Y[:, 0])
-overall_mean = mean(X)
-grouped_data = group_data(X, Y)
-class_mean = []
-for key in grouped_data:
-    class_mean.append(mean(grouped_data[key]))
-Sb = np.zeros((X.shape[1], X.shape[1]))
-for i in range(len(classes)):
-    val = np.reshape(class_mean[i] - overall_mean, (len(class_mean[i]), 1))
-    Sb += np.multiply(len(grouped_data[str(int(i))]), np.dot(val, val.T))
-
-Sw = np.zeros((X.shape[1], X.shape[1]))
-for i in range(len(classes)):
-    val = np.subtract(X.T, np.reshape(class_mean[i], (len(class_mean[i]), 1)))
-    Sw = np.add(Sw, np.dot(val, val.T))
-
-inv = np.linalg.inv(Sw)
-mat = np.dot(inv, Sb)
-eigen_value, eigen_vector = np.linalg.eig(mat)
-eigens = np.concatenate((np.reshape(eigen_value, (len(eigen_value), 1)), eigen_vector), axis=1)
-eigens = eigens[np.argsort(eigens[:, 0])]
-dataX = utils.project_data(dataset.dataX, eigens[-1:, 1:])
+#classes = np.unique(Y[:, 0])
+#overall_mean = mean(X)
+#grouped_data = group_data(X, Y)
+#class_mean = []
+#for key in grouped_data:
+#    class_mean.append(mean(grouped_data[key]))
+#Sb = np.zeros((X.shape[1], X.shape[1]))
+#for i in range(len(classes)):
+#    val = np.reshape(class_mean[i] - overall_mean, (len(class_mean[i]), 1))
+#    Sb += np.multiply(len(grouped_data[str(int(i))]), np.dot(val, val.T))
+#
+#Sw = np.zeros((X.shape[1], X.shape[1]))
+#for i in range(len(classes)):
+#    val = np.subtract(X.T, np.reshape(class_mean[i], (len(class_mean[i]), 1)))
+#    Sw = np.add(Sw, np.dot(val, val.T))
+#
+#inv = np.linalg.inv(Sw)
+#mat = np.dot(inv, Sb)
+#eigen_value, eigen_vector = np.linalg.eig(mat)
+#eigens = np.concatenate((np.reshape(eigen_value, (len(eigen_value), 1)), eigen_vector), axis=1)
+#eigens = eigens[np.argsort(eigens[:, 0])]
+#dataX = utils.project_data(dataset.dataX, eigens[-1:, 1:])
 #dataX = np.reshape(dataX, (-1,1))
-utils.plot_histograms(dataX, Y)
+#utils.plot_histograms(dataX, Y)
 #from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 #lda = LinearDiscriminantAnalysis(n_components = 1)
 #see = lda.fit_transform(trainX, trainY)
