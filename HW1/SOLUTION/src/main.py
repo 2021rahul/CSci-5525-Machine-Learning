@@ -44,13 +44,14 @@ def LDA2dGaussGM(num_crossval):
         trainX, trainY, testX, testY = dataset.generate_data()
         GM = algorithm.Gaussian_Generative()
         GM.train(trainX, trainY)
-        accuracy.append(NB.test(testX, testY)/len(testY))
+        accuracy.append(GM.test(testX, testY)/len(testY))
 
     mean = np.mean(accuracy)
     stddev = np.std(accuracy)
 
-    print("Mean Error: ", mean)
-    print("Standard Deviation in Error: ", stddev)
+    print("Mean Accuracy: ", mean)
+    print("Standard Deviation in Accuracy: ", stddev)
+    return mean, stddev
 
 
 def logisticRegression(filename, num_splits , train_percent):
@@ -58,26 +59,31 @@ def logisticRegression(filename, num_splits , train_percent):
     if(filename=="DIGITS"):
         dataset = data.Digits()
         dataset.load_dataset()
+        dataset.one_hot_encoded()
     elif(filename=="BOSTON"):
         dataset = data.Boston()
         dataset.load_dataset()
         dataset.categorize_data()
-    dataset.one_hot_encoded()
 
     # RUN LOGISTIC REGRESSION ON THE SPLITS
     accuracy = []
     for i in range(num_splits):
         trainX, trainY, testX, testY = dataset.generate_data()
         train_use = int((train_percent*len(trainX))/100)
-        LR = algorithm.LogisticRegression([trainX.shape[1], trainY.shape[1]])
-        LR.train(trainX[:train_use,:], trainY[:train_use, :], 0.00001, 1000)
+        if(filename=="DIGITS"):
+            LR = algorithm.LogisticRegression([trainX.shape[1], trainY.shape[1]])
+            LR.train(trainX[:train_use,:], trainY[:train_use, :], 0.00001, 1000)
+        else:
+            LR = algorithm.LogisticRegression_2class([trainX.shape[1], trainY.shape[1]])
+            LR.train(trainX[:train_use,:], trainY[:train_use, :], 0.0000001, 4000)
         accuracy.append(LR.test(testX, testY)/len(testY))
 
     mean = np.mean(accuracy)
     stddev = np.std(accuracy)
 
-    print("Mean Error: ", mean)
-    print("Standard Deviation in Error: ", stddev)
+    print("Mean Accuracy: ", mean)
+    print("Standard Deviation in Accuracy: ", stddev)
+    return mean, stddev
 
 
 def naiveBayesGaussian(filename, num_splits , train_percent):
@@ -105,35 +111,62 @@ def naiveBayesGaussian(filename, num_splits , train_percent):
     mean = np.mean(accuracy)
     stddev = np.std(accuracy)
 
-    print("Mean Error: ", mean)
-    print("Standard Deviation in Error: ", stddev)
+    print("Mean Accuracy: ", mean)
+    print("Standard Deviation in Accuracy: ", stddev)
+    return mean, stddev
 
 
 if __name__ == "__main__":
 
     # PROJECT BOSTON DATA TO 1 DIMENSION
     print("PROJECT BOSTON DATA TO 1 DIMENSION")
-#    LDA1dProjection()
+    LDA1dProjection()
+    print("\n######################################################\n")
 
-    # CLASSIFY DIGITS DATA USING GAUSSIAN GENERATIVE MODELLING
-#    LDA2dGaussGM(num_crossval=10)
+     # CLASSIFY DIGITS DATA USING GAUSSIAN GENERATIVE MODELLING
+    print("GAUSSIAN GENERATIVE MODELLING ON DIGITS DATASET PROJECTED TO 2 DIMENSIONS")
+    LDA2dGaussGM(num_crossval=10)
+    print("\n######################################################\n")
 
     # LOGISTIC REGRESSION CLASSIFIER ON DIGITS DATASET
     print("LOGISTIC REGRESSION CLASSIFIER ON DIGITS DATASET")
+    mean_accuracy = []
+    mean_stddev = []
     for train_percent in config.percentage:
-        logisticRegression("DIGITS", 10, train_percent)
+        mean, stddev = logisticRegression("DIGITS", 10, train_percent)
+        mean_accuracy.append(mean)
+        mean_stddev.append(stddev)
+    utils.plot_accuracy(mean_accuracy, mean_stddev, config.percentage)
+    print("\n######################################################\n")
 
     # LOGISTIC REGRESSION CLASSIFIER ON BOSTON DATASET
     print("LOGISTIC REGRESSION CLASSIFIER ON BOSTON DATASET")
+    mean_accuracy = []
+    mean_stddev = []
     for train_percent in config.percentage:
-        logisticRegression("BOSTON", 10, train_percent)
+        mean, stddev = logisticRegression("BOSTON", 10, train_percent)
+        mean_accuracy.append(mean)
+        mean_stddev.append(stddev)
+    utils.plot_accuracy(mean_accuracy, mean_stddev, config.percentage)
+    print("\n######################################################\n")
 
     # NAIVE BAYES CLASSIFIER ON DIGITS DATASET
     print("NAIVE BAYES CLASSIFIER ON DIGITS DATASET")
+    mean_accuracy = []
+    mean_stddev = []
     for train_percent in config.percentage:
-        logisticRegression("DIGITS", 10, train_percent)
+        mean, stddev = naiveBayesGaussian("DIGITS", 10, train_percent)
+        mean_accuracy.append(mean)
+        mean_stddev.append(stddev)
+    utils.plot_accuracy(mean_accuracy, mean_stddev, config.percentage)
+    print("\n######################################################\n")
 
     # NAIVE BAYES CLASSIFIER ON BOSTON DATASET
     print("NAIVE BAYES CLASSIFIER ON BOSTON DATASET")
+    mean_accuracy = []
+    mean_stddev = []
     for train_percent in config.percentage:
-        logisticRegression("BOSTON", 10, train_percent)
+        mean, stddev = naiveBayesGaussian("BOSTON", 10, train_percent)
+        mean_accuracy.append(mean)
+        mean_stddev.append(stddev)
+    utils.plot_accuracy(mean_accuracy, mean_stddev, config.percentage)

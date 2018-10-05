@@ -29,7 +29,7 @@ class LDA():
             return np.reshape(class_mean[1]-class_mean[0], (-1, 1))
         Sb = np.zeros((X.shape[1], X.shape[1]))
         for i in range(len(classes)):
-            val = np.reshape(class_mean[i] - overall_mean, (len(class_mean[i]), 1))
+            val = np.reshape(class_mean[i] - overall_mean, (-1, 1))
             Sb += np.multiply(len(grouped_data[str(int(i))]), np.dot(val, val.T))
         return Sb
 
@@ -55,7 +55,7 @@ class LDA():
         else:
             mat = np.dot(np.linalg.pinv(Sw), Sb)
             eigens = utils.get_sorted_eigens(mat)
-            self.w = eigens[-self.dimensions:, 1:].T
+            self.w = eigens[:, :self.dimensions]
 
 
 class Gaussian_Generative():
@@ -68,7 +68,7 @@ class Gaussian_Generative():
     def calulate_priors(self, Y):
         classes = np.unique(Y)
         for class_val in classes:
-            self.priors[str(class_val)] = len(Y[Y == class_val])/len(Y)
+            self.priors[str(int(class_val))] = len(Y[Y == class_val])/len(Y)
 
     def calculate_params(self, X, Y):
         grouped_data = utils.group_data(X, Y)
@@ -85,7 +85,7 @@ class Gaussian_Generative():
     def calculate_probability(self, x, mean, sigma, prior):
         invsigma = np.linalg.inv(sigma)
         detsigma = np.linalg.det(sigma)
-        num = np.exp(-0.5*(x-mean)*invsigma*(x-mean).T)
+        num = np.exp(-0.5*np.dot((x-mean), np.dot(invsigma, (x-mean).T)))
         den = 2*np.pi*np.power(detsigma, 0.5)
         return (num/den)*prior
 
@@ -110,7 +110,7 @@ class Gaussian_Generative():
                 prob = self.calculate_probability(data, self.class_mean[class_val], self.sigma, self.priors[class_val])
                 probabilities[class_val] = prob
             predictions.append(self.predict(probabilities))
-        predictions = np.asarray(predictions)
+        predictions = np.reshape(np.asarray(predictions), (-1, 1))
         count = np.sum(predictions == testY)
         return count
 
@@ -139,12 +139,27 @@ class LogisticRegression():
         for epoch in range(n_epochs):
             self.gradient_update(dataX, dataY, lr_rate)
             log_likelihood = self.negative_log_likelihood(dataX, dataY)
-#            print("Epoch: ", epoch, " error: ", log_likelihood)
 
     def test(self, dataX, dataY):
         prediction = self.forward_propogation(dataX)
         prediction = prediction.argmax(axis=1)
         target = dataY.argmax(axis=1)
+        count = np.sum(prediction == target)
+        return count
+
+
+class LogisticRegression_2class(LogisticRegression):
+
+    def __init__(self, shape):
+        super(LogisticRegression_2class, self).__init__(shape)
+
+    def forward_propogation(self, x):
+        return utils.sigmoid(self.weights, self.bias, x)
+
+    def test(self, dataX, dataY):
+        prediction = self.forward_propogation(dataX)
+        prediction = prediction > 0.5
+        target = dataY
         count = np.sum(prediction == target)
         return count
 

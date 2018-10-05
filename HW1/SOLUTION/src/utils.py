@@ -9,6 +9,8 @@ Created on Mon Sep 17 09:20:43 2018
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+import os
+import config
 
 
 def mean(array):
@@ -28,8 +30,10 @@ def randomize_data(X, Y):
 
 def get_sorted_eigens(array):
     eigen_value, eigen_vector = np.linalg.eig(array)
-    eigens = np.concatenate((np.reshape(eigen_value, (len(eigen_value), 1)), eigen_vector), axis=1)
-    return eigens[np.argsort(eigens[:, 0])]
+    index = np.flip(np.argsort(eigen_value), axis=0)
+    eigen_value = eigen_value[index].real
+    eigen_vector = eigen_vector[:,index].real
+    return eigen_vector
 
 
 def group_data(X, Y):
@@ -45,6 +49,12 @@ def project_data(X, directions):
     return np.dot(X, directions)
 
 
+def plot_accuracy(accuracy, stddev, percentage):
+    plt.plot(percentage, accuracy, label='Accuracy')
+    plt.plot(percentage, stddev, label='Stddev')
+    plt.show()
+
+
 def plot_histograms(X, Y):
     colors = ["green", "red", "yellow", "blue"]
     grouped_data = group_data(X, Y)
@@ -54,8 +64,10 @@ def plot_histograms(X, Y):
     plt.show()
 
 
-def sigmoid(X):
-    return 1.0/(1.0 + np.exp(-1.0 * X))
+def sigmoid(weights, bias, x):
+    output = np.dot(x, weights)
+    output = np.add(output, bias)
+    return 1.0/(1.0 + np.exp(-output))
 
 
 def softmax(weights, bias, x):
