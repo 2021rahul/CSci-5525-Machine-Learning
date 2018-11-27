@@ -9,8 +9,8 @@ Created on Mon Sep 17 09:20:43 2018
 import numpy as np
 import random
 import matplotlib.pyplot as plt
-import os
 import config
+import os
 
 
 def randomize_data(X, Y):
@@ -29,7 +29,15 @@ def group_data(X, Y):
     return grouped_data
 
 
-def plot_accuracy(accuracy, stddev, percentage):
-    plt.plot(percentage, accuracy, label='Accuracy')
-    plt.plot(percentage, stddev, label='Stddev')
-    plt.show()
+def plot_accuracy(accuracy, stddev, X, name):
+    plt.plot(np.log10(X), accuracy, label='Accuracy')
+    plt.plot(np.log10(X), stddev, label='Stddev')
+    plt.savefig(os.path.join(config.OUTPUT_DIR, name+".png"))
+    plt.close()
+
+
+def plot_loss(loss_values, iter_values, name):
+    for i in range(5):
+        plt.plot(np.log10(iter_values[i]), loss_values[i])
+    plt.savefig(os.path.join(config.OUTPUT_DIR, name+".png"))
+    plt.close()

@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import config
 import utils
-from mnist import MNIST
+from sklearn.preprocessing import normalize
 import random
 
 
@@ -24,9 +24,11 @@ class DATA():
         self.index = 0
 
     def read_data(self, filename):
-        data = pd.read_csv(os.path.join(config.DATA_DIR, filename))
+        data = pd.read_csv(os.path.join(config.DATA_DIR, filename), header=None)
         self.dataX = data.iloc[:, 1:].values
+        self.dataX = normalize(self.dataX)
         self.dataY = np.reshape(data.iloc[:,0].values, (-1, 1))
+        self.dataY[self.dataY == 3] = -1
 
     def generate_data(self):
         grouped_data = utils.group_data(self.dataX, self.dataY)
