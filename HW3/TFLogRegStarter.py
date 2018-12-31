@@ -63,10 +63,11 @@ with tf.name_scope("cost_function"):
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=Y))
 tf.summary.scalar('loss', loss)
 
+global_step = tf.Variable(0, name='global_step',trainable=False)
 # Step 6: define training op
 # using gradient descent to minimize loss
 with tf.name_scope("train"):
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss)
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step=global_step)
 
 merged_summary_op = tf.summary.merge_all()
 with tf.Session() as sess:
@@ -80,7 +81,7 @@ with tf.Session() as sess:
             X_batch, Y_batch = mnist.train.next_batch(batch_size)
             feed_dict = {X: X_batch, Y: Y_batch}
             summary_str, _, loss_batch = sess.run([merged_summary_op, optimizer, loss], feed_dict=feed_dict)
-            summary_writer.add_summary(summary_str, str(i)+"_"+str(batch))
+            summary_writer.add_summary(summary_str, global_step=global_step.eval())
             total_loss += loss_batch
         print('Average loss epoch {0}: {1}'.format(i, total_loss / n_batches))
     summary_writer.close()

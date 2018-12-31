@@ -64,6 +64,8 @@ with tf.variable_scope('fc') as scope:
 
     fc = tf.nn.relu(tf.matmul(pool2, weights_fc) + biases_fc, name='relu')
 
+print(fc.get_shape())
+
 with tf.variable_scope('softmax_linear') as scope:
     weights_softmax = tf.get_variable('weights', [128, 10],
                              initializer=tf.truncated_normal_initializer())
@@ -93,7 +95,7 @@ with tf.Session() as sess:
             X_batch, Y_batch = mnist.train.next_batch(batch_size)
             feed_dict = {X: X_batch, Y: Y_batch}
             summary_str, _, loss_batch = sess.run([merged_summary_op, optimizer, loss], feed_dict=feed_dict)
-            summary_writer.add_summary(summary_str, str(i)+"_"+str(batch))
+            summary_writer.add_summary(summary_str, global_step=global_step.eval())
             total_loss += loss_batch
         print('Average loss epoch {0}: {1}'.format(i, total_loss / n_batches))
     

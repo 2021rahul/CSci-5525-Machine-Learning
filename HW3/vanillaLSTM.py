@@ -32,8 +32,11 @@ with tf.name_scope('data'):
     X = tf.placeholder(shape=[None, 784], dtype=tf.float32, name="inputs")
     Y = tf.placeholder(shape=[None, 10], dtype=tf.float32, name="labels")
 
+print(X.get_shape())
 images = tf.reshape(X, (batch_size,time_steps,n_input))    
+print(images.get_shape())
 images=tf.unstack(images ,time_steps,1)
+print(images.get_shape())
 
 with tf.name_scope("LSTM"):
     lstm_layer=rnn.BasicLSTMCell(num_units, forget_bias=1)
@@ -51,8 +54,9 @@ with tf.name_scope("cost_function"):
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=Y))
 tf.summary.scalar('loss', loss)
 
+global_step = tf.Variable(0, dtype=tf.int32, trainable=False, name='global_step')
 with tf.name_scope("train"):
-    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(loss)
+    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(loss, global_step)
 
 
 merged_summary_op = tf.summary.merge_all()
@@ -68,7 +72,7 @@ with tf.Session() as sess:
             X_batch, Y_batch = mnist.train.next_batch(batch_size=batch_size)
             feed_dict = {X: X_batch, Y: Y_batch}
             summary_str, _, loss_batch = sess.run([merged_summary_op, optimizer, loss], feed_dict=feed_dict)
-            summary_writer.add_summary(summary_str, str(i)+"_"+str(batch))
+            summary_writer.add_summary(summary_str, global_step=global_step.eval())
             total_loss += loss_batch
         print('Average loss epoch {0}: {1}'.format(i, total_loss / n_batches))
        

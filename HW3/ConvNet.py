@@ -21,7 +21,7 @@ mnist = input_data.read_data_sets("/data/mnist", one_hot=True)
 learning_rate=0.0001
 n_classes=10
 batch_size=128
-n_epochs = 100
+n_epochs = 25
 skip_step = 10
 dropout = 0.75
 
@@ -97,7 +97,7 @@ with tf.Session() as sess:
             X_batch, Y_batch = mnist.train.next_batch(batch_size)
             feed_dict = {X: X_batch, Y: Y_batch, DROPOUT: dropout}
             summary_str, _, loss_batch = sess.run([merged_summary_op, optimizer, loss], feed_dict=feed_dict)
-            summary_writer.add_summary(summary_str, str(i)+"_"+str(batch))
+            summary_writer.add_summary(summary_str, global_step=global_step.eval())
             total_loss += loss_batch
         print('Average loss epoch {0}: {1}'.format(i, total_loss / n_batches))
     
